@@ -1,0 +1,21 @@
+{
+	"name": "streetvoice",
+	"version": "1.0.0",
+	"description": "StreetVoice plugin for Volumio2",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "cades kao",
+	"license": "ISC",
+	"volumio_info": {
+		"prettyName": "streetvoice",
+		"icon": "fa-lightbulb-o",
+		"plugin_type": "music_service"
+	},
+	"dependencies": {
+		"fs-extra": "^0.28.0",
+		"kew": "^0.7.0",
+		"v-conf": "^1.4.0"
+	}
+}
