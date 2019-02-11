@@ -239,6 +239,24 @@
 						}
 					],
 					"updated": "9-1-2019"
+				},
+				{
+					"prettyName": "streetvoice",
+					"icon": "fa-lightbulb-o",
+					"name": "streetvoice",
+					"version": "1.0.0",
+					"url": "http://volumio.github.io/volumio-plugins/plugins/volumio/armhf/music_service/streetvoice/streetvoice.zip",
+					"license": "ISC",
+					"description": "StreetVoice plugin for Volumio2",
+					"details": "StreetVoice plugin for Volumio2",
+					"author": "cades kao",
+					"screenshots": [
+						{
+							"image": "",
+							"thumb": ""
+						}
+					],
+					"updated": "11-2-2019"
 				}
 			]
 		},
