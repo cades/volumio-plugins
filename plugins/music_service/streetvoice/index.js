@@ -325,13 +325,23 @@ streetvoice.prototype.search = volumiofy(async function (query) {
 
 streetvoice.prototype.launchPlayer = function () {
   if (this.player) this.quitPlayer();
-  this.player = spawn('vlc', '-I http --http-password=test --aout=alsa --alsa-audio-device=default:CARD=sndrpihifiberry'.split(' '));
+  const audioDevice = this.getAudioDevice();
+  this.player = spawn('vlc', `-I http --http-password=test --aout=alsa --alsa-audio-device=${audioDevice}`.split(' '));
 }
 
 streetvoice.prototype.quitPlayer = function () {
   if (!this.player) return;
   this.player.kill();
   this.player = null;
+}
+
+streetvoice.prototype.getAudioDevice = function () {
+  const outdev = this.commandRouter.sharedVars.get('alsa.outputdevice');
+  if (outdev == 'softvolume' ) {
+    return self.getAdditionalConf('audio_interface', 'alsa_controller', 'softvolumenumber');
+  }
+
+  return 'plughw:' + outdev + outdev.includes(',') ? '' : ',0';
 }
 
 function volumiofy(fn) {
