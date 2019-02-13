@@ -1,7 +1,6 @@
 'use strict';
 
 const libQ = require('kew');
-const fs = require('fs-extra');
 const config = new (require('v-conf'))();
 const { spawn } = require('child_process');
 const { getPlaylist, searchForSongs, convertSongUrlToM3u8Url, getM3u8Info, getTrackInfo } = require('./lib');
@@ -323,23 +322,6 @@ streetvoice.prototype.search = volumiofy(async function (query) {
     }))
   }];
 });
-
-streetvoice.prototype._searchArtists = function (results) {
-
-};
-
-streetvoice.prototype._searchAlbums = function (results) {
-
-};
-
-streetvoice.prototype._searchPlaylists = function (results) {
-
-
-};
-
-streetvoice.prototype._searchTracks = function (results) {
-
-};
 
 streetvoice.prototype.launchPlayer = function () {
   if (this.player) quitPlayer();
