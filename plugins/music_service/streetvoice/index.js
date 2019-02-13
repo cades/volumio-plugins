@@ -324,7 +324,7 @@ streetvoice.prototype.search = volumiofy(async function (query) {
 });
 
 streetvoice.prototype.launchPlayer = function () {
-  if (this.player) quitPlayer();
+  if (this.player) this.quitPlayer();
   this.player = spawn('vlc', '-I http --http-password=test --aout=alsa --alsa-audio-device=default:CARD=sndrpihifiberry'.split(' '));
 }
 
