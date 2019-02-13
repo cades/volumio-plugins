@@ -33,7 +33,7 @@ streetvoice.prototype.onVolumioStart = volumiofy(function() {
 
 streetvoice.prototype.onStart = volumiofy(function() {
   this.logger.info('[StreetVoice] start');
-  this.commandRouter.pushToastMessage('success', "Plugin Start!", "StreetVoice plugin start successfully"); // for testing. remove in future.
+  this.commandRouter.pushToastMessage('success', "Plugin Start!", "StreetVoice plugin start successfully");
   this.addToBrowseSources();
   this.launchPlayer();
 });
