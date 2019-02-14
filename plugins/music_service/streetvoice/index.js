@@ -336,12 +336,7 @@ streetvoice.prototype.quitPlayer = function () {
 }
 
 streetvoice.prototype.getAudioDevice = function () {
-  const outdev = this.commandRouter.sharedVars.get('alsa.outputdevice');
-  if (outdev == 'softvolume' ) {
-    return self.getAdditionalConf('audio_interface', 'alsa_controller', 'softvolumenumber');
-  }
-
-  return 'plughw:' + outdev + outdev.includes(',') ? '' : ',0';
+  return 'default:CARD=sndrpihifiberry';
 }
 
 function volumiofy(fn) {
