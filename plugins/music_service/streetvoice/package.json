@@ -14,12 +14,12 @@
 		"plugin_type": "music_service"
 	},
 	"dependencies": {
-		"base-64": "^0.1.0",
 		"cheerio": "^1.0.0-rc.2",
 		"fs-extra": "^0.28.0",
 		"kew": "^0.7.0",
 		"m3u8-parser": "^4.3.0",
 		"node-fetch": "^2.3.0",
+		"request": "^2.88.0",
 		"v-conf": "^1.4.0"
 	}
 }

@@ -4,7 +4,9 @@ const libQ = require('kew');
 const config = new (require('v-conf'))();
 const { spawn } = require('child_process');
 const { getPlaylist, searchForSongs, convertSongUrlToM3u8Url, getM3u8Info, getTrackInfo } = require('./lib');
-const { play, seek, pause, resume, stop } = require('./vlc');
+const http = require('http');
+const request = require('request');
+const Url = require('url');
 
 // reimplement Promise API using kew...WTF
 function Promise(fn) {
@@ -31,16 +33,23 @@ streetvoice.prototype.onVolumioStart = volumiofy(function() {
 });
 
 streetvoice.prototype.onStart = volumiofy(function() {
+  this.mpdPlugin = this.commandRouter.pluginManager.getPlugin('music_service', 'mpd');
   this.logger.info('[StreetVoice] start');
   this.commandRouter.pushToastMessage('success', "Plugin Start!", "StreetVoice plugin start successfully");
   this.addToBrowseSources();
-  this.launchPlayer();
+
+  this.proxyServer = http.createServer(function(req, res) {
+    const { path } = Url.parse(req.url);
+    const segments = path.replace(/^\//, '').split('/');
+    segments.splice(path.endsWith('.ts') ? -2 : -1, 1);
+    const destPath = segments.join('/');
+    req.pipe(request(destPath)).pipe(res);
+  }).listen(2019);
 });
 
 streetvoice.prototype.onStop = volumiofy(function() {
   this.logger.info('[StreetVoice] stop');
-  stop();
-  this.quitPlayer();
+  this.proxyServer.close();
 });
 
 streetvoice.prototype.onRestart = function() {
@@ -192,34 +201,50 @@ streetvoice.prototype.handleBrowseUri = volumiofy(async function (uri) {
 streetvoice.prototype.clearAddPlayTrack = volumiofy(async function(track) {
   this.logger.info('[streetvoice] clearAddPlayTrack');
   this.logger.info('[streetvoice] track:' + JSON.stringify(track));
-  const res = await play(track.uri);
-  return res;
+
+  const self = this;
+  return self.mpdPlugin.sendMpdCommand('stop', [])
+    .then(function() {
+      return self.mpdPlugin.sendMpdCommand('clear', []);
+    })
+    .then(function() {
+      return self.mpdPlugin.sendMpdCommand('add "' + 'http://localhost:2019/' + track.uri + '/' + track.title + '"', []);
+    })
+    .then(function() {
+      self.commandRouter.stateMachine.setConsumeUpdateService('mpd', false, false);
+      return self.mpdPlugin.sendMpdCommand('play',[]).then(function () {
+        self.logger.info('[streetvoice] after play');
+        return self.mpdPlugin.getState().then(function (state) {
+          self.logger.info("[streetvoice] " + JSON.stringify(state));
+          state.trackType = "streetvoice";
+          self.logger.info("[streetvoice] " + JSON.stringify(state));
+          return self.commandRouter.stateMachine.syncState(state, "streetvoice");
+        });
+      });
+    });
 });
 
-streetvoice.prototype.seek = volumiofy(async function (timepos) {
-  this.logger.info('[' + Date.now() + '] ' + 'streetvoice::seek to ' + timepos);
-  seek(Math.round(timepos / 1000));
+streetvoice.prototype.seek = volumiofy(async function (position) {
+  this.logger.info('[' + Date.now() + '] ' + 'streetvoice::seek to ' + position);
+  return this.mpdPlugin.seek(position);
 });
 
 // Stop
 streetvoice.prototype.stop = function() {
-  const self = this;
   this.logger.info('[' + Date.now() + '] ' + 'streetvoice::stop');
-  stop();
+  return this.mpdPlugin.sendMpdCommand('stop',[]);
 };
 
 // Pause
 streetvoice.prototype.pause = function() {
-  const self = this;
   this.logger.info('[' + Date.now() + '] ' + 'streetvoice::pause');
-  pause();
+  return this.mpdPlugin.sendMpdCommand('pause',[]);
 };
 
-// Pause
+// Resume
 streetvoice.prototype.resume = function() {
-  const self = this;
   this.logger.info('[' + Date.now() + '] ' + 'streetvoice::resume');
-  resume();
+  return this.mpdPlugin.sendMpdCommand('play',[]);
 };
 
 // Get state
@@ -255,12 +280,14 @@ streetvoice.prototype.explodeUri = volumiofy(async function(uri) {
   const trackInfo = await getTrackInfo(uri);
 
   const data = {
-    uri: m3u8Url,
     service: 'streetvoice',
+    uri: m3u8Url,
     name: trackInfo.songName,
+    title: trackInfo.songName,
     artist: trackInfo.artist,
     albumart: trackInfo.albumArt,
     type: 'track',
+    trackType: 'streetvoice',
     duration
   };
   this.logger.info('[streetvoice] explode uri result: ' + JSON.stringify(data));
@@ -322,22 +349,6 @@ streetvoice.prototype.search = volumiofy(async function (query) {
     }))
   }];
 });
-
-streetvoice.prototype.launchPlayer = function () {
-  if (this.player) this.quitPlayer();
-  const audioDevice = this.getAudioDevice();
-  this.player = spawn('vlc', `-I http --http-password=test --aout=alsa --alsa-audio-device=${audioDevice}`.split(' '));
-}
-
-streetvoice.prototype.quitPlayer = function () {
-  if (!this.player) return;
-  this.player.kill();
-  this.player = null;
-}
-
-streetvoice.prototype.getAudioDevice = function () {
-  return 'default:CARD=sndrpihifiberry';
-}
 
 function volumiofy(fn) {
   return function(...args) {
