@@ -4,9 +4,9 @@ const libQ = require('kew');
 const config = new (require('v-conf'))();
 const { spawn } = require('child_process');
 const { getPlaylist, searchForSongs, convertSongUrlToM3u8Url, getM3u8Info, getTrackInfo } = require('./lib');
-const http = require('http');
-const request = require('request');
-const Url = require('url');
+// const http = require('http');
+// const request = require('request');
+// const Url = require('url');
 
 // reimplement Promise API using kew...WTF
 function Promise(fn) {
@@ -38,18 +38,18 @@ streetvoice.prototype.onStart = volumiofy(function() {
   this.commandRouter.pushToastMessage('success', "Plugin Start!", "StreetVoice plugin start successfully");
   this.addToBrowseSources();
 
-  this.proxyServer = http.createServer(function(req, res) {
-    const { path } = Url.parse(req.url);
-    const segments = path.replace(/^\//, '').split('/');
-    segments.splice(path.endsWith('.ts') ? -2 : -1, 1);
-    const destPath = segments.join('/');
-    req.pipe(request(destPath)).pipe(res);
-  }).listen(2019);
+  // this.proxyServer = http.createServer(function(req, res) {
+  //   const { path } = Url.parse(req.url);
+  //   const segments = path.replace(/^\//, '').split('/');
+  //   segments.splice(path.endsWith('.ts') ? -2 : -1, 1);
+  //   const destPath = segments.join('/');
+  //   req.pipe(request(destPath)).pipe(res);
+  // }).listen(2019);
 });
 
 streetvoice.prototype.onStop = volumiofy(function() {
   this.logger.info('[StreetVoice] stop');
-  this.proxyServer.close();
+  // this.proxyServer.close();
 });
 
 streetvoice.prototype.onRestart = function() {
@@ -208,7 +208,8 @@ streetvoice.prototype.clearAddPlayTrack = volumiofy(async function(track) {
       return self.mpdPlugin.sendMpdCommand('clear', []);
     })
     .then(function() {
-      return self.mpdPlugin.sendMpdCommand('add "' + 'http://localhost:2019/' + track.uri + '/' + track.title + '"', []);
+      return self.mpdPlugin.sendMpdCommand('add "' + track.uri + '"', []);
+      // return self.mpdPlugin.sendMpdCommand('add "' + 'http://localhost:2019/' + track.uri + '/' + track.title + '"', []);
     })
     .then(function() {
       self.commandRouter.stateMachine.setConsumeUpdateService('mpd', false, false);
